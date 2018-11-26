@@ -2,57 +2,211 @@
 
 
 
-Import dataset from the following link: AirQuality Data Set
+#Problem
 
-Perform the following written operations:
+#1. Use the below given data set
 
-Read the file in Zip format and get it into R.
+#   Data Set
 
-Create Univariate for all the columns.
+#2. Perform the below given activities:
 
-Check for missing values in all columns.
+#a. Create classification model using logistic regression model
 
-Impute the missing values using appropriate methods.
+#b. verify model goodness of fit
 
-Create bi-variate analysis for all relationships.
+#c. Report the accuracy measures
 
-Test relevant hypothesis for valid relations.
+#d. Report the variable importance
 
-Create cross tabulations with derived variables.
+#e. Report the unimportant variables
 
-Check for trends and patterns in time series.
+#f. Interpret the results
 
-Find out the most polluted time of the day and the name of the chemical compound.
+#g. Visualize the results
 
-Ans 1 ->
 
-unzip("x.zip")
 
-for (i in files.temp)
 
-unzip(i)
 
-airqual <- read.table("C:/Desktop/airquality.txt")
+#Answers
 
-airquality <- read.csv("~/CUNY/Bridge Classes/R Programming/Week4/airquality.csv", row.names=1) head(airquality)
+#a)
 
-ggplot(airquality, aes(x = Ozone)) + geom_histogram(binwidth = 5, fill="green", color="black")
+#using dataset cs2m
 
-3.We can use two colsums or apply. Please see below
+#reading the dataset
 
-colSums(is.na(airquality))
+cs2m <- read.csv("C:/Users/SIMATIT/Documents/cs2m.csv")
 
-        or 
-        
-apply(is.na(airquality),2,sum)
+View(cs2m)
 
-md.pattern(airquality)
 
-t.test(airquality)
 
-We need to use Z value to find check whether H0 is accepted or rejected
+#logistic regression
 
-table(airquality)
+model<- glm(DrugR~BP+Chlstrl+Age+Prgnt+AnxtyLH, data = cs2m ,family= binomial)
 
-ts(inputData,frequency = 1, start = c(2018, 2)
+model
+
+summary(model)
+
+
+
+#classification 
+
+library(caTools)
+
+library(tree)
+
+#splitting
+
+set.seed(1)
+
+split<- sample.split(cs2m$DrugR,SplitRatio = 0.70)
+
+cs2mTrain <- subset(cs2m,split == TRUE)
+
+cs2mTest<- subset(cs2m, split == FALSE)
+
+
+
+modelClassTree<- tree(DrugR~BP+Chlstrl+Age+Prgnt+AnxtyLH,data = cs2mTrain)
+
+plot(modelClassTree)
+
+
+
+text(modelClassTree,pretty = 0 ,cex=0.75)
+
+pred<- predict(modelClassTree,newdata= cs2mTest)
+
+
+
+predict<- predict(model,type="response")
+
+head(predict,3)
+
+cs2m$predict <- predict
+
+cs2m$predictROUND<- round(predict,digits = 0)
+
+#confusion matrix
+
+table(cs2m$DrugR,predict>= 0.5)
+
+
+
+sum<- sum(table(cs2m$DrugR,predict>= 0.5))
+
+
+
+#f) & b) & c)
+
+#Answers
+
+#interpretation, Accuracy and model goodness  of our model
+
+summary(model)
+
+
+
+#accuracy of our model
+
+accuracy<- (13+12)/(30)
+
+accuracy
+
+#0.8333333333
+
+install.packages("verification")
+
+library(verification)
+
+predictTrain<- predict(model,cs2m,type="response")
+
+table(cs2m$DrugR,predictTrain >=0.5)
+
+head(predictTrain,3)
+
+auc(cs2m$DrugR,predictTrain)
+
+
+
+#model goodness
+
+#****NOTE****
+
+#Area under the curve: 0.9333333
+
+#also our AIC is less which is measure of good model
+
+#NULL deviance is also less which is good for model
+
+#Residual deviance is also less model
+
+#by this all things we conclude that our model is good and fit
+
+
+
+#d)
+
+install.packages("caret")
+
+library(caret)
+
+varImp(step_fit)
+
+
+
+#g)
+
+#plot the fitted model
+
+plot(model$fitted.values)
+
+
+
+#plot glm
+
+library(ggplot2)
+
+ggplot(cs2mTrain, aes(x=Age, y=DrugR)) + geom_point() + 
+
+  stat_smooth(method="glm", family="binomial", se=FALSE)
+
+
+
+#e)
+
+library(MASS)
+
+step_fit<- stepAIC(model,method ="backward")
+
+summary(step_fit)
+
+confint(step_fit)
+
+#thus by this method we get our best model and variable bp is not as much important y this method
+
+
+
+#some test
+
+#ANOVA on base model
+
+anova(model,test = 'Chisq')
+
+#ANOVA from reduced model after applying the Step AIC
+
+anova(step_fit,test = 'Chisq')
+
+
+
+#check for multicollinearity
+
+library(car)
+
+vif(model)
+
+vif(step_fit)
 
